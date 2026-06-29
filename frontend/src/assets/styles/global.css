@@ -1,0 +1,31 @@
+/* 全局重置 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { height: 100%; }
+body { height: 100%; font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif; background: #f5f5f5; color: #333; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+#app { height: 100%; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+ul, ol { list-style: none; }
+input, button, textarea, select { font: inherit; outline: none; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
+/* Element Plus 主题覆盖 */
+:root {
+  --el-color-primary: #ff4400;
+  --el-color-primary-light-3: #ff7733;
+  --el-color-primary-light-5: #ff9966;
+  --el-color-primary-light-7: #ffcc99;
+  --el-color-primary-light-8: #ffe0b3;
+  --el-color-primary-light-9: #fff0e6;
+  --el-color-primary-dark-2: #cc3600;
+  --el-border-radius-base: 6px;
+}
+.el-button--primary { --el-button-bg-color: #ff4400; --el-button-border-color: #ff4400; --el-button-hover-bg-color: #ff6633; --el-button-hover-border-color: #ff6633; }
+.el-button--danger { --el-button-bg-color: #ff4400; --el-button-border-color: #ff4400; }
+.el-tag--primary { --el-tag-bg-color: #fff0e6; --el-tag-text-color: #ff4400; --el-tag-border-color: #ffcc99; }
+.el-pagination.is-background .el-pager li.is-active { background-color: #ff4400; }
+.el-menu--horizontal .el-menu-item.is-active { color: #ff4400; border-bottom-color: #ff4400; }
+.el-carousel__button { background: #ff4400; }

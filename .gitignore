@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# 虚拟环境
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# pytest
+.pytest_cache/
+
+# 前端构建产物
+frontend/dist/
+frontend/node_modules/
+
+# Docker（暂不使用）
+Dockerfile
+docker-compose.yml
+.dockerignore
+nginx.conf
+
+# 内部文档
+Bug报告.md
+代码优化清单.md
+学习教材/
+电商项目系统文件/
+面试知识点总结.md
+
+# 系统文件
+.DS_Store
+Thumbs.db
