@@ -104,27 +104,28 @@ async function handleRegister() {
 </script>
 
 <style scoped>
-.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%); }
-.login-box { width: 400px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
-.login-header { padding: 32px 32px 0; text-align: center; }
-.login-logo { font-size: 28px; font-weight: bold; color: #ff4400; cursor: pointer; margin-bottom: 24px; }
-.login-tabs { display: flex; border-bottom: 1px solid #f0f0f0; }
-.login-tabs span { flex: 1; padding: 12px; text-align: center; cursor: pointer; color: #999; border-bottom: 2px solid transparent; }
-.login-tabs span.active { color: #ff4400; border-bottom-color: #ff4400; font-weight: bold; }
+.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+.login-box { width: 400px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); }
+.login-header { padding: 36px 32px 0; text-align: center; }
+.login-logo { font-size: 24px; font-weight: 600; color: #1e293b; cursor: pointer; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.login-tabs { display: flex; border-bottom: 1px solid #e2e8f0; }
+.login-tabs span { flex: 1; padding: 12px; text-align: center; cursor: pointer; color: #64748b; border-bottom: 2px solid transparent; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+.login-tabs span.active { color: #3b82f6; border-bottom-color: #3b82f6; }
 
 .login-form { padding: 24px 32px 32px; }
-.input-group { display: flex; align-items: center; border: 1px solid #e8e8e8; border-radius: 8px; margin-bottom: 14px; padding: 0 12px; height: 44px; }
-.input-group:focus-within { border-color: #ff4400; }
-.input-icon { margin-right: 8px; font-size: 16px; }
-.input-group input { flex: 1; border: none; outline: none; font-size: 14px; }
+.input-group { display: flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 16px; padding: 0 14px; height: 48px; transition: border-color 0.2s; }
+.input-group:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+.input-icon { margin-right: 12px; font-size: 16px; color: #94a3b8; }
+.input-group input { flex: 1; border: none; outline: none; font-size: 14px; color: #1e293b; background: transparent; }
+.input-group input::placeholder { color: #94a3b8; }
 
-.role-select { display: flex; gap: 24px; margin-bottom: 14px; font-size: 13px; color: #666; }
-.role-select label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
-.role-select input { accent-color: #ff4400; }
+.role-select { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; color: #64748b; }
+.role-select label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.role-select input { accent-color: #3b82f6; width: 14px; height: 14px; }
 
-.submit-btn { width: 100%; height: 44px; background: #ff4400; color: #fff; border: none; border-radius: 22px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 4px; }
-.submit-btn:hover { background: #e63e00; }
-.submit-btn:disabled { opacity: .6; cursor: not-allowed; }
-.form-footer { text-align: center; margin-top: 16px; font-size: 13px; color: #999; }
-.form-footer a { color: #ff4400; cursor: pointer; margin-left: 4px; }
+.submit-btn { width: 100%; height: 48px; background: #3b82f6; color: #ffffff; border: none; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
+.submit-btn:hover { background: #2563eb; }
+.submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+.form-footer { text-align: center; margin-top: 20px; font-size: 13px; color: #64748b; }
+.form-footer a { color: #3b82f6; cursor: pointer; margin-left: 4px; font-weight: 500; }
 </style>

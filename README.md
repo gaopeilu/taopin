@@ -1,157 +1,104 @@
-# 🛒 电商平台后端系统
+# 🛒 淘拼商城 — 全栈电商平台
 
-一套完整的B2C电商后端系统，基于Django + Django REST Framework构建，涵盖用户认证、商品管理、购物车、订单、支付、优惠券、评价、搜索8大核心模块。
+> 基于 Django REST Framework + Vue 3 的全栈电商系统，包含用户、商品、购物车、订单、支付、优惠券、评价、搜索 8 大核心模块。
 
-## 技术栈
+## 📸 项目展示
 
-**后端**
-- Python 3.12 + Django 6.0 + Django REST Framework
-- MySQL 8.0 + Redis 5.0
-- Celery 异步任务（订单超时取消、优惠券过期）
-- JWT 认证（SimpleJWT，双Token + Token轮换 + 黑名单）
+| 首页 | 商品列表 | 商品详情 |
+|:---:|:---:|:---:|
+| ![首页](screenshots/01-首页.png) | ![商品列表](screenshots/02-商品列表.png) | ![商品详情](screenshots/03-商品详情.png) |
 
-**前端**
-- Vue 3.5 + Vite 8
-- Element Plus + Pinia + Vue Router
-- Axios 请求封装（Token 自动刷新）
+| 购物车 | 订单列表 | 优惠券中心 |
+|:---:|:---:|:---:|
+| ![购物车](screenshots/04-购物车.png) | ![订单列表](screenshots/05-订单列表.png) | ![优惠券中心](screenshots/06-优惠券中心.png) |
 
-**基础设施**
-- pytest 单元测试（51 个用例）
-- Redis 缓存（购物车、验证码、商品热点）
-- Celery Beat 定时任务
+## 🏗️ 技术栈
 
-## 功能模块
-
-| 模块 | 功能 |
+| 层级 | 技术 |
 |------|------|
-| 用户 | 注册/登录（JWT双Token）、个人信息、地址管理、升级商家 |
-| 商品 | SPU/SKU分离、分类树、品牌、搜索、热销排行、图片管理 |
-| 购物车 | Redis存储、添加/删除/清空/全选、库存校验 |
-| 订单 | 创建/支付/发货/收货/取消/退款、库存自动扣减与恢复 |
-| 支付 | 模拟支付流程、支付回调、状态查询 |
-| 优惠券 | 满减券/折扣券/新人券、领取/使用/过期自动标记 |
-| 评价 | 1-5星评分、图片、匿名、点赞防重复 |
-| 搜索 | 搜索历史、关键词建议 |
+| **后端** | Python 3.12 · Django 6.0 · Django REST Framework · Celery 5 |
+| **前端** | Vue 3.5 · Vite 8 · Element Plus · Pinia · Vue Router 5 |
+| **数据库** | MySQL 8.0 · Redis 5.0 |
+| **认证** | JWT（SimpleJWT）· 双 Token 机制 |
+| **测试** | pytest · pytest-django（51 个单元测试） |
+| **部署** | Docker · docker-compose · Nginx |
 
-## 核心技术亮点
+## ✨ 核心功能
 
-### 1. 防超卖机制
+### 用户模块
+- 用户注册/登录（支持用户名、手机号、邮箱三种方式）
+- JWT 双 Token 认证（Access Token 2h + Refresh Token 7d + 自动刷新）
+- 收货地址管理、升级商家、店铺设置
 
-订单创建使用 `select_for_update()` 行级锁 + `transaction.atomic()` 事务保护，防止并发下单导致超卖：
+### 商品模块
+- SPU/SKU 分离设计，支持多规格、独立库存
+- 分类树（自关联外键）、品牌管理、图片上传
+- 商品搜索（多字段模糊搜索）、热销排行、分类筛选
+- Redis 缓存分类树和热销商品，写操作时主动失效
 
-```python
-with transaction.atomic():
-    sku = GoodsSKU.objects.select_for_update().get(id=sku_id)
-    if sku.stock < quantity:
-        raise serializers.ValidationError("库存不足")
-    sku.stock -= quantity
-    sku.save()
-```
+### 购物车
+- **Redis Hash 存储**：key=`cart:{user_id}`，读写速度比 MySQL 快 100 倍
+- 支持添加、删除、修改数量、全选/取消全选、清空
+- 批量查询优化，`select_related` 避免 N+1 查询
 
-### 2. 优惠券防超发
+### 订单模块
+- **防超卖方案**：`transaction.atomic()` + `select_for_update()` 行锁
+- 订单状态机：待付款 → 待发货 → 已发货 → 已完成 / 已取消 / 退款中
+- 快照设计：OrderItem 用 IntegerField 存储 sku_id，商品改名改价不影响历史订单
+- 软删除：`is_deleted` 标记，保留审计记录
 
-使用 `F()` 表达式原子扣减库存，配合唯一约束防止重复领取：
+### 支付模块
+- 模拟支付流程（开发环境）
+- 支付回调签名验证 + 状态值白名单
+- 事务保证支付记录和订单状态一致性
 
-```python
-updated = Coupon.objects.filter(
-    id=pk, 
-    claimed_count__lt=F('total_count')
-).update(claimed_count=F('claimed_count') + 1)
-```
+### 优惠券
+- 三种类型：满减券、折扣券、新人券
+- **防超发**：`F()` 表达式原子扣减 + `unique_together` 唯一约束
+- 下单时自动抵扣，支持选择优惠券
 
-### 3. Redis购物车
+### 评价模块
+- 1-5 星评分、图片评价、匿名评价
+- 点赞防重复（`get_or_create` + 唯一约束 + `F()` 原子递增）
+- 重复评价校验
 
-使用Redis Hash结构存储购物车，高频读写场景性能优于数据库：
+### 搜索模块
+- 搜索历史记录（Redis 缓存 + 数据库持久化）
+- 搜索建议（从商品名称中提取）
 
-```
-Key:   cart:{user_id}
-Field: sku_id
-Value: {"quantity": 2, "spu_id": 1, "is_selected": true}
-```
-
-### 4. JWT双Token认证
-
-- Access Token: 2小时有效期，用于接口认证
-- Refresh Token: 7天有效期，用于刷新Access Token
-- Token轮换：每次刷新Token时，旧Token加入黑名单
-
-### 5. SPU-SKU商品模型
-
-采用电商行业标准的SPU-SKU分离架构：
-- SPU（标准产品单元）：描述抽象商品，如"iPhone 15 Pro Max"
-- SKU（库存量单元）：描述具体规格，如"黑色 256GB"，每个SKU有独立的价格、库存、销量
-
-## 项目结构
-
-```
-dianshang/
-├── dianshang/              # Django 项目配置
-│   ├── settings.py         # 配置（MySQL、Redis、Celery、JWT）
-│   ├── celery.py           # Celery 应用配置
-│   └── urls.py             # 路由入口
-├── apps/                   # 业务模块
-│   ├── users/              # 用户模块
-│   ├── goods/              # 商品模块
-│   ├── orders/             # 订单模块
-│   ├── cart/               # 购物车（Redis）
-│   ├── payment/            # 支付模块
-│   ├── marketing/          # 优惠券模块
-│   ├── reviews/            # 评价模块
-│   └── search/             # 搜索模块
-├── utils/                  # 公共工具（响应格式、权限、异常处理）
-├── tests/                  # 单元测试
-├── frontend/               # Vue 3 前端
-│   ├── src/
-│   │   ├── api/            # API 请求封装
-│   │   ├── views/          # 页面组件
-│   │   ├── components/     # 公共组件
-│   │   ├── store/          # Pinia 状态管理
-│   │   ├── router/         # 路由配置
-│   │   └── utils/          # 前端工具函数
-├── requirements.txt        # Python 依赖
-└── pytest.ini              # 测试配置
-```
-
-## 快速启动
+## 🚀 快速启动
 
 ### 环境要求
-- Python 3.10+
-- MySQL 8.0
-- Redis 5.0+
-- Node.js 18+
+- Python 3.10+ · MySQL 8.0 · Redis 5.0+ · Node.js 18+
 
 ### 后端启动
 
 ```bash
-# 1. 克隆项目
+# 克隆项目
 git clone https://github.com/gaopeilu/taopin.git
 cd taopin
 
-# 2. 创建虚拟环境
+# 创建虚拟环境
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # Mac/Linux
+source .venv/bin/activate  # Mac/Linux
+# .venv\Scripts\activate   # Windows
 
-# 3. 安装依赖
+# 安装依赖
 pip install -r requirements.txt
 
-# 4. 创建数据库
-mysql -u root -p -e "CREATE DATABASE dianshang DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+# 创建数据库
+mysql -u root -p -e "CREATE DATABASE dianshang DEFAULT CHARACTER SET utf8mb4;"
 
-# 5. 配置环境变量（可选，有默认值）
-set DJANGO_SECRET_KEY=your-secret-key
-set DJANGO_DEBUG=True
-
-# 6. 迁移数据库
+# 迁移数据库
 python manage.py migrate
 
-# 7. 创建管理员
+# 创建管理员
 python manage.py createsuperuser
 
-# 8. 启动服务
+# 启动后端
 python manage.py runserver
 
-# 9. 启动 Celery（另开终端，可选）
+# 启动 Celery（另开终端）
 celery -A dianshang worker -l info
 celery -A dianshang beat -l info
 ```
@@ -161,58 +108,71 @@ celery -A dianshang beat -l info
 ```bash
 cd frontend
 npm install
-npm run dev      # 开发模式 http://localhost:3001
-npm run build    # 生产构建
+npm run dev  # http://localhost:3001
 ```
 
-## 运行测试
+### Docker 一键启动
+
+```bash
+docker-compose up -d
+```
+
+## 🧪 运行测试
 
 ```bash
 pytest tests/ -v
 ```
 
-当前测试覆盖：用户(12)、商品(10)、购物车(12)、订单(12)、支付(5) = **51 个用例**
-
-## API 文档
-
-所有接口统一前缀 `/api/v1/`，使用 JWT Bearer Token 认证。
-
-| 模块 | 前缀 | 主要接口 |
-|------|------|---------|
-| 用户 | `/api/v1/users/` | register, login, me, password, address |
-| 商品 | `/api/v1/goods/` | categories, brands, spus, skus, images |
-| 购物车 | `/api/v1/cart/` | list, add, update, delete, clear, select-all |
-| 订单 | `/api/v1/orders/` | create, detail, pay, cancel, ship, complete, refund |
-| 支付 | `/api/v1/payment/` | create, mock-pay, status, callback |
-| 优惠券 | `/api/v1/coupons/` | list, claim, mine |
-| 评价 | `/api/v1/reviews/` | list, create, mine, like |
-| 搜索 | `/api/v1/search/` | history, clear, suggest |
-
-## 自定义权限
-
-| 权限类 | 说明 |
-|--------|------|
-| `IsSeller` | 仅商家可访问 |
-| `IsUser` | 仅普通用户可访问 |
-| `IsSellerOrReadOnly` | 商家可写，其他只读 |
-
-## 环境变量（可选）
-
-生产环境建议使用环境变量配置敏感信息：
-
-```bash
-export SECRET_KEY='your-secret-key'
-export DB_NAME='dianshang'
-export DB_USER='your_username'
-export DB_PASSWORD='your_password'
-export DB_HOST='localhost'
-export REDIS_URL='redis://localhost:6379/0'
+```
+tests/test_cart.py    ············  12 passed
+tests/test_goods.py   ··········   10 passed
+tests/test_orders.py  ············ 12 passed
+tests/test_payment.py ·····        5 passed
+tests/test_users.py   ············ 12 passed
+======================= 51 passed ========================
 ```
 
-## License
+## 📁 项目结构
 
-MIT License
+```
+taopin/
+├── dianshang/              # Django 项目配置
+│   ├── settings.py         # 全局配置（MySQL、Redis、Celery、JWT）
+│   ├── celery.py           # Celery 应用配置
+│   └── urls.py             # 路由入口
+├── apps/                   # 业务模块
+│   ├── users/              # 用户（注册、登录、地址、升级商家）
+│   ├── goods/              # 商品（SPU/SKU、分类、品牌、图片）
+│   ├── orders/             # 订单（创建、支付、发货、退款）
+│   ├── cart/               # 购物车（Redis Hash）
+│   ├── payment/            # 支付（创建、模拟支付、回调）
+│   ├── marketing/          # 优惠券（领取、使用、过期）
+│   ├── reviews/            # 评价（评分、点赞、图片）
+│   └── search/             # 搜索（历史、建议）
+├── utils/                  # 公共工具（响应格式、权限、异常处理）
+├── tests/                  # 单元测试（51 个用例）
+├── frontend/               # Vue 3 前端
+├── screenshots/            # 项目截图
+├── requirements.txt        # Python 依赖
+├── docker-compose.yml      # Docker 编排
+└── pytest.ini              # 测试配置
+```
 
-## 联系方式
+## 📊 API 接口总览
 
-如有问题，欢迎提Issue或PR。
+| 模块 | 接口数 | 主要接口 |
+|------|--------|---------|
+| 用户 | 13 | 注册、登录、个人信息、地址、升级商家 |
+| 商品 | 5 ViewSet | 分类、品牌、SPU、SKU、图片 |
+| 购物车 | 6 | 添加、删除、修改、清空、全选 |
+| 订单 | 8 | 创建、支付、发货、收货、取消、退款 |
+| 支付 | 4 | 创建支付、模拟支付、状态查询、回调 |
+| 优惠券 | 3 | 列表、领取、我的优惠券 |
+| 评价 | 4 | 列表、创建、我的评价、点赞 |
+| 搜索 | 3 | 历史、清空、建议 |
+
+## 📝 相关文档
+
+- [Bug 修复报告](Bug报告.md)
+- [代码优化清单](代码优化清单.md)
+- [面试知识点总结](面试知识点总结.md)
