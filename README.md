@@ -20,7 +20,7 @@
 | **前端** | Vue 3.5 · Vite 8 · Element Plus · Pinia · Vue Router 5 |
 | **数据库** | MySQL 8.0 · Redis 5.0 |
 | **认证** | JWT（SimpleJWT）· 双 Token 机制 |
-| **测试** | pytest · pytest-django（51 个单元测试） |
+| **测试** | pytest · requests（136 个接口自动化测试） |
 | **部署** | Docker · docker-compose · Nginx |
 
 ## ✨ 核心功能
@@ -65,6 +65,26 @@
 ### 搜索模块
 - 搜索历史记录（Redis 缓存 + 数据库持久化）
 - 搜索建议（从商品名称中提取）
+
+## 📐 Git 提交规范
+
+本项目遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
+
+| 标签 | 用途 | 示例 |
+|------|------|------|
+| `feat` | 新增业务功能 | `feat: 新增优惠券领取接口` |
+| `test` | 新增/修改测试用例 | `test: 新增营销模块(优惠券)接口测试 8个用例` |
+| `docs` | 修改文档 | `docs: 更新README，添加测试方案说明` |
+| `fix` | Bug 修复 | `fix: 修复优惠券超发并发问题` |
+| `refactor` | 代码重构 | `refactor: 提取公共分页类到 utils` |
+| `chore` | 依赖、配置修改 | `chore: 升级 Django 到 6.0.6` |
+
+```bash
+# 提交示例
+git commit -m "test: 新增订单模块接口测试 22个用例"
+git commit -m "docs: 添加 API 接口文档"
+git commit -m "fix: 修复购物车重复添加商品报错"
+```
 
 ## 🚀 快速启动
 
@@ -117,20 +137,65 @@ npm run dev  # http://localhost:3001
 docker-compose up -d
 ```
 
-## 🧪 运行测试
+## 🧪 接口自动化测试
+
+项目采用 `pytest + requests` 进行接口级自动化测试，不依赖 Django TestCase，直接发送 HTTP 请求验证 API 契约。
+
+### 运行测试
 
 ```bash
-pytest tests/ -v
+cd test_apis
+pytest -v
 ```
 
+### 用例覆盖（已完成 4 个模块，共 136 个用例）
+
+| 文件 | 用例数 | 覆盖接口 |
+|------|:---:|------|
+| `test_users.py` | 44 | 注册、登录、个人信息、地址管理、商家升级 |
+| `test_goods.py` | 58 | 分类、品牌、SPU、SKU、图片 |
+| `test_cart.py` | 26 | 添加、查询、修改数量、删除、全选、清空 |
+| `test_coupons.py` | 8 | 列表、领取、我的优惠券 |
+| **合计** | **136** | |
+
+### 测试架构
+
 ```
-tests/test_cart.py    ············  12 passed
-tests/test_goods.py   ··········   10 passed
-tests/test_orders.py  ············ 12 passed
-tests/test_payment.py ·····        5 passed
-tests/test_users.py   ············ 12 passed
-======================= 51 passed ========================
+session 级 fixture（仅登录一次）
+    │
+    ├── auth()        → token = test111 的 JWT
+    └── seller_auth() → token = seller111 的 JWT
+            │
+            ▼
+    各模块测试类通过 @pytest.fixture(autouse=True) 注入
 ```
+
+### 优惠券防重复领取测试方案
+
+优惠券模块的核心难点是**并发安全**：如何在多人同时抢券时不超发、不重复。后端通过两层数据库机制保证：
+
+| 机制 | 实现 | 防护目标 |
+|------|------|---------|
+| `F()` 原子更新 | `UPDATE ... SET claimed_count = claimed_count + 1 WHERE claimed_count < total_count` | 防止总领取数超过发行量 |
+| `unique_together` | 数据库唯一约束 `(user, coupon)` | 防止同一用户重复领取同一张券 |
+
+接口测试从外部验证这两层防护是否生效：
+
+| 用例 | 验证方式 | 预期响应 |
+|------|---------|----------|
+| **正常领取** | 登录 → 遍历列表找 `is_claimed=False` 的券 → `POST /{id}/claim/` | 200 `"领取成功"` |
+| **重复领取** | 对已领取的券再次 `POST /{id}/claim/` → 触发 `IntegrityError` | 400 `"您已领取过该优惠券"` |
+| **已领完** | 对 `remaining=0` 的券 `POST /{id}/claim/` → UPDATE 返回 0 行 | 400 `"优惠券已领完"` |
+| **未登录** | 不带 Token 调 `/claim/` → DRF `IsAuthenticated` 拦截 | 401 |
+| **不存在** | `POST /99999/claim/` → 查不到券 | 404 `"优惠券不存在"` |
+
+> 所有异常路径的 message 均为后端源码手写，不是系统默认值，因此断言精确到 message 内容。
+
+### 用例设计原则
+
+- **前置条件 skip 而非 fail**：领券用例依赖"存在未领取的券"，若条件不满足则 `pytest.skip()` 跳过，不计入失败
+- **接口测试只断言响应**：不查数据库验证写入，数据库正确性是后端单元测试的职责
+- **session 级 token 复用**：`scope="session"` 确保全部用例只登录一次，避免 429 限流
 
 ## 📁 项目结构
 
@@ -150,7 +215,7 @@ taopin/
 │   ├── reviews/            # 评价（评分、点赞、图片）
 │   └── search/             # 搜索（历史、建议）
 ├── utils/                  # 公共工具（响应格式、权限、异常处理）
-├── tests/                  # 单元测试（51 个用例）
+├── test_apis/              # 接口自动化测试（136 个用例）
 ├── frontend/               # Vue 3 前端
 ├── screenshots/            # 项目截图
 ├── requirements.txt        # Python 依赖
