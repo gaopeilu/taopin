@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 
     # 第三方应用
     'rest_framework',            # Django REST Framework
+    'rest_framework_simplejwt.token_blacklist',  # JWT黑名单
     'corsheaders',               # 跨域处理
     'django_filters',            # 过滤器
 
@@ -294,4 +295,3 @@ LOGGING = {
         },
     },
 }
-
