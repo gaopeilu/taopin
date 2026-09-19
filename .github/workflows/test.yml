@@ -18,11 +18,12 @@ env:
   DJANGO_SETTINGS_MODULE: dianshang.settings
   PYTHONIOENCODING: utf-8
   TEST_USER: test111
-  TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+  # 密码通过 conftest.py 默认值提供，配置 GitHub Secrets 后再取消下面注释
+  # TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
   TEST_SELLER: seller111
-  TEST_SELLER_PASSWORD: ${{ secrets.TEST_SELLER_PASSWORD }}
+  # TEST_SELLER_PASSWORD: ${{ secrets.TEST_SELLER_PASSWORD }}
   TEST_ADMIN: admin
-  TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+  # TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
 
 jobs:
   # ====================================================================
