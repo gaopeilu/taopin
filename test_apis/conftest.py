@@ -196,21 +196,34 @@ def django_server():
     自动启动 Django 开发服务器，pytest 结束后自动关闭。
     不再需要手动 runserver！
     """
+    # 先检查是否已有 Django 在跑（CI 可能提前启动了）
+    try:
+        requests.get("http://localhost:8000/api/v1/", timeout=1)
+        yield None
+        return
+    except requests.ConnectionError:
+        pass
+
     proc = subprocess.Popen(
-        ["python", "manage.py", "runserver", "0.0.0.0:8000", "--noreload"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        [sys.executable, "manage.py", "runserver", "0.0.0.0:8000", "--noreload"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     # 等待服务就绪
-    for _ in range(20):
+    for _ in range(30):
         try:
             requests.get("http://localhost:8000/api/v1/", timeout=1)
             break
         except requests.ConnectionError:
             time.sleep(0.5)
     else:
+        stdout, stderr = proc.communicate(timeout=1)
         proc.terminate()
-        pytest.exit("❌ Django 服务启动超时，请检查数据库迁移是否执行", returncode=1)
+        error_msg = stderr.decode(errors="replace")[:2000] if stderr else "(no stderr)"
+        pytest.exit(
+            f"Django 服务启动超时\n\n--- stderr ---\n{error_msg}",
+            returncode=1,
+        )
 
     yield proc
 
