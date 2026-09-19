@@ -7,8 +7,8 @@ djangorestframework-simplejwt==5.5.1
 django-cors-headers==4.9.0
 django-filter==25.2
 
-# 数据库
-mysqlclient==2.2.8
+# 数据库（本地MySQL需手动安装: pip install mysqlclient）
+# mysqlclient==2.2.8
 
 # Redis & Celery
 redis==5.3.1
