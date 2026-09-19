@@ -23,6 +23,7 @@ python-dateutil==2.9.0.post0
 # 测试
 pytest==9.1.1
 pytest-django==4.12.0
+pydantic==2.11.5
 
 # 负载测试
 locust==2.40.6
