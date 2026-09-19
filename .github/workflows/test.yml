@@ -46,6 +46,9 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libmysqlclient-dev pkg-config
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
@@ -79,6 +82,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libmysqlclient-dev pkg-config
 
       - name: Install dependencies
         run: |
@@ -149,6 +155,9 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libmysqlclient-dev pkg-config
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
@@ -188,6 +197,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libmysqlclient-dev pkg-config
 
       - name: Install dependencies
         run: |
