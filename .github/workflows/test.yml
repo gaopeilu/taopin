@@ -254,6 +254,7 @@ jobs:
 
       - name: Run Locust load test
         run: |
+          mkdir -p reports
           locust -f locustfile.py \
             --host=http://localhost:8000/api/v1 \
             --headless \

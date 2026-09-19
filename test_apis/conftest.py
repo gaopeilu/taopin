@@ -116,41 +116,43 @@ def pytest_runtest_makereport(item, call):
 
 # ====================================================================
 # pytest-html 自定义表头：增加 模块 / 优先级 / 耗时 列
+# 已注释：pytest-html 钩子与基准测试插件存在兼容性问题（benchmark-only 时报
+# unknown hook），CI 中回归报告改用 Allure 生成，本地需要 HTML 报告时取消注释
 # ====================================================================
 
 
-def pytest_html_results_table_header(cells):
-    cells.insert(2, '<th class="sortable" data-column-type="text">模块</th>')
-    cells.insert(3, '<th class="sortable" data-column-type="text">优先级</th>')
-    cells.insert(4, '<th class="sortable" data-column-type="number">耗时(s)</th>')
+# def pytest_html_results_table_header(cells):
+#     cells.insert(2, '<th class="sortable" data-column-type="text">模块</th>')
+#     cells.insert(3, '<th class="sortable" data-column-type="text">优先级</th>')
+#     cells.insert(4, '<th class="sortable" data-column-type="number">耗时(s)</th>')
 
 
-def pytest_html_results_table_row(report, cells):
-    try:
-        feature = next(
-            (
-                m.kwargs.get("feature", "")
-                for m in report.user_properties
-                if m[0] == "allure_feature"
-            ),
-            "",
-        )
-        severity = next(
-            (
-                m.kwargs.get("severity", "")
-                for m in report.user_properties
-                if m[0] == "allure_severity"
-            ),
-            "",
-        )
-        duration = f"{report.duration:.2f}" if hasattr(report, "duration") else "-"
-        cells.insert(2, f'<td class="col-module">{feature}</td>')
-        cells.insert(3, f'<td class="col-severity">{severity}</td>')
-        cells.insert(4, f'<td class="col-duration">{duration}</td>')
-    except (AttributeError, IndexError, KeyError):
-        cells.insert(2, '<td class="col-module">-</td>')
-        cells.insert(3, '<td class="col-severity">-</td>')
-        cells.insert(4, '<td class="col-duration">-</td>')
+# def pytest_html_results_table_row(report, cells):
+#     try:
+#         feature = next(
+#             (
+#                 m.kwargs.get("feature", "")
+#                 for m in report.user_properties
+#                 if m[0] == "allure_feature"
+#             ),
+#             "",
+#         )
+#         severity = next(
+#             (
+#                 m.kwargs.get("severity", "")
+#                 for m in report.user_properties
+#                 if m[0] == "allure_severity"
+#             ),
+#             "",
+#         )
+#         duration = f"{report.duration:.2f}" if hasattr(report, "duration") else "-"
+#         cells.insert(2, f'<td class="col-module">{feature}</td>')
+#         cells.insert(3, f'<td class="col-severity">{severity}</td>')
+#         cells.insert(4, f'<td class="col-duration">{duration}</td>')
+#     except (AttributeError, IndexError, KeyError):
+#         cells.insert(2, '<td class="col-module">-</td>')
+#         cells.insert(3, '<td class="col-severity">-</td>')
+#         cells.insert(4, '<td class="col-duration">-</td>')
 
 
 # ====================================================================
