@@ -29,6 +29,16 @@ media/
 
 # pytest
 .pytest_cache/
+reports/
+
+# Locust
+locust_stats_*.csv
+locust_report.html
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
 
 # 前端构建产物
 frontend/dist/

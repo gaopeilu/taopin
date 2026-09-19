@@ -23,88 +23,85 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-ab%sy&x@g34o1ir)5l8r3!+dt7)d0^@vfxzuz@k3le%3o6zdyc'  # 仅开发环境fallback
+    "DJANGO_SECRET_KEY",
+    "django-insecure-ab%sy&x@g34o1ir)5l8r3!+dt7)d0^@vfxzuz@k3le%3o6zdyc",  # 仅开发环境fallback
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     # 第三方应用
-    'rest_framework',            # Django REST Framework
-    'rest_framework_simplejwt.token_blacklist',  # JWT黑名单
-    'corsheaders',               # 跨域处理
-    'django_filters',            # 过滤器
-
+    "rest_framework",  # Django REST Framework
+    "rest_framework_simplejwt.token_blacklist",  # JWT黑名单
+    "corsheaders",  # 跨域处理
+    "django_filters",  # 过滤器
     # 本地应用
-    'apps.users',  # 用户模块
-    'apps.goods',  # 商品模块
-    'apps.orders',  # 订单模块
-    'apps.reviews',  # 评价模块
-    'apps.cart',  # 购物车模块
-    'apps.payment',  # 支付模块
-    'apps.marketing',  # 营销模块
-    'apps.search',  # 搜索模块
+    "apps.users",  # 用户模块
+    "apps.goods",  # 商品模块
+    "apps.orders",  # 订单模块
+    "apps.reviews",  # 评价模块
+    "apps.cart",  # 购物车模块
+    "apps.payment",  # 支付模块
+    "apps.marketing",  # 营销模块
+    "apps.search",  # 搜索模块
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # 跨域中间件（必须在CommonMiddleware之前）
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",  # 跨域中间件（必须在CommonMiddleware之前）
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'dianshang.urls'
+ROOT_URLCONF = "dianshang.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'dianshang.wsgi.application'
+WSGI_APPLICATION = "dianshang.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQL_DATABASE', 'dianshang'),
-        'USER': os.environ.get('MYSQL_USER', 'root'),
-        'PASSWORD': os.environ.get('MYSQL_PASSWORD', '123456'),
-        'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('MYSQL_PORT', '3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.environ.get("MYSQL_DATABASE", "dianshang"),
+        "USER": os.environ.get("MYSQL_USER", "root"),
+        "PASSWORD": os.environ.get("MYSQL_PASSWORD", "123456"),
+        "HOST": os.environ.get("MYSQL_HOST", "127.0.0.1"),
+        "PORT": os.environ.get("MYSQL_PORT", "3306"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
         },
     }
 }
@@ -115,16 +112,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -132,9 +129,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -144,78 +141,75 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # 静态文件收集目录
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # 静态文件目录
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    BASE_DIR / "static",
 ]
 
 # 媒体文件配置（用户上传的文件）
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 # ==================== 自定义用户模型 ====================
 # 指定使用自定义的User模型
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = "users.User"
 
 
 # ==================== REST Framework配置 ====================
 REST_FRAMEWORK = {
     # 认证方式：JWT Token认证
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-
     # 默认权限：需要登录才能访问
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     # 分页配置
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,  # 每页显示20条
-
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,  # 每页显示20条
     # 过滤器配置
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter',
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
     ],
-
     # 异常处理
-    'EXCEPTION_HANDLER': 'utils.exceptions.custom_exception_handler',
-
+    "EXCEPTION_HANDLER": "utils.exceptions.custom_exception_handler",
     # 限流配置
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '60/minute',          # 匿名用户每分钟60次
-        'login': '10/minute',          # 登录接口每分钟10次
-        'register': '5/minute',        # 注册接口每分钟5次
-        'send_code': '3/minute',       # 验证码每分钟3次
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "60/minute",  # 匿名用户每分钟60次
+        "login": "10/minute",  # 登录接口每分钟10次
+        "register": "5/minute",  # 注册接口每分钟5次
+        "send_code": "3/minute",  # 验证码每分钟3次
     },
 }
+
+# 开发/测试环境放宽限流，避免全量跑测试时触发 429
+if DEBUG:
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "1000/minute"
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"] = "1000/minute"
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["register"] = "1000/minute"
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["send_code"] = "1000/minute"
 
 
 # ==================== JWT配置 ====================
 SIMPLE_JWT = {
     # Access Token有效期：2小时
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
-
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
     # Refresh Token有效期：7天
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     # 刷新Token时是否生成新的Refresh Token
-    'ROTATE_REFRESH_TOKENS': True,
-
+    "ROTATE_REFRESH_TOKENS": True,
     # 刷新后是否将旧Token加入黑名单
-    'BLACKLIST_AFTER_ROTATION': True,
+    "BLACKLIST_AFTER_ROTATION": True,
 }
 
 
@@ -231,67 +225,69 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 
 # ==================== Redis缓存配置 ====================
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/0')
+REDIS_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/0")
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
     }
 }
 
 
 # ==================== Celery异步任务配置 ====================
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/1')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://127.0.0.1:6379/2')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Shanghai'
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/1")
+CELERY_RESULT_BACKEND = os.environ.get(
+    "CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/2"
+)
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Asia/Shanghai"
 CELERY_ENABLE_UTC = True
 
 # 定时任务调度
 CELERY_BEAT_SCHEDULE = {
-    'cancel-expired-orders': {
-        'task': 'apps.orders.tasks.cancel_expired_orders',
-        'schedule': 300.0,  # 每5分钟检查一次超时订单
+    "cancel-expired-orders": {
+        "task": "apps.orders.tasks.cancel_expired_orders",
+        "schedule": 300.0,  # 每5分钟检查一次超时订单
     },
-    'expire-coupons': {
-        'task': 'apps.marketing.tasks.expire_coupons',
-        'schedule': 3600.0,  # 每小时检查一次过期优惠券
+    "expire-coupons": {
+        "task": "apps.marketing.tasks.expire_coupons",
+        "schedule": 3600.0,  # 每小时检查一次过期优惠券
     },
 }
 
 
 # ==================== 默认主键类型 ====================
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # ==================== 日志配置 ====================
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
         },
     },
-    'handlers': {
-        'file': {
-            'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'formatter': 'verbose',
+    "handlers": {
+        "file": {
+            "level": "WARNING",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs" / "django.log",
+            "formatter": "verbose",
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'WARNING',
-            'propagate': True,
+    "loggers": {
+        "django": {
+            "handlers": ["file"],
+            "level": "WARNING",
+            "propagate": True,
         },
     },
 }

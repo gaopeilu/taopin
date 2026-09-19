@@ -1,0 +1,221 @@
+name: Test & Report
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  pull_request:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+
+env:
+  TEST_BASE_URL: http://localhost:8000/api/v1
+  DJANGO_SETTINGS_MODULE: dianshang.settings
+  PYTHONIOENCODING: utf-8
+  TEST_USER: test111
+  TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+  TEST_SELLER: seller111
+  TEST_SELLER_PASSWORD: ${{ secrets.TEST_SELLER_PASSWORD }}
+  TEST_ADMIN: admin
+  TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+
+jobs:
+  # ====================================================================
+  # 阶段一：冒烟测试（2min，每次 push 必跑）
+  # ====================================================================
+  smoke:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-html pytest-cov pytest-benchmark \
+            allure-pytest pytest-rerunfailures pytest-xdist
+
+      - name: Migrate database
+        run: python manage.py migrate
+
+      - name: Run smoke tests
+        run: pytest test_apis/ -m smoke -v --tb=short
+
+  # ====================================================================
+  # 阶段二：全量回归 + 报告（PR / merge 到 main 才跑）
+  # ====================================================================
+  regression:
+    name: Full Regression + Report
+    needs: smoke
+    if: github.event_name == 'pull_request' || github.ref_name == 'main' || github.ref_name == 'master'
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-html pytest-cov pytest-benchmark \
+            allure-pytest pytest-rerunfailures pytest-xdist
+
+      - name: Migrate database
+        run: python manage.py migrate
+
+      - name: Run full regression with Allure
+        run: |
+          pytest test_apis/ -m "not benchmark" \
+            -n auto --dist loadscope \
+            --alluredir=allure-results --clean-alluredir \
+            --reruns 2 --reruns-delay 1 \
+            --cov=apps --cov-report=term --cov-report=xml:coverage.xml \
+            --cov-fail-under=20 \
+            --junitxml=junit.xml \
+            -v --tb=short
+
+      - name: Generate Allure Report
+        if: always()
+        uses: simple-elf/allure-report-action@v1
+        with:
+          allure_results: allure-results
+          allure_history: allure-history
+
+      - name: Publish Allure Report to Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: allure-history
+          keep_files: false
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            junit.xml
+            coverage.xml
+            allure-results/
+
+  # ====================================================================
+  # 阶段三：性能基准（仅 main 分支 push 或手动触发）
+  # ====================================================================
+  benchmark:
+    name: Performance Benchmark
+    needs: regression
+    if: github.ref_name == 'main' || github.ref_name == 'master' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-benchmark allure-pytest
+
+      - name: Migrate database
+        run: python manage.py migrate
+
+      - name: Run benchmarks
+        run: pytest test_apis/ -m benchmark --benchmark-only --benchmark-autosave --benchmark-json=benchmarks.json
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmarks.json
+
+  # ====================================================================
+  # 阶段四：负载测试（手动触发 或 main 分支定时执行）
+  # ====================================================================
+  loadtest:
+    name: Load Test (Locust)
+    needs: regression
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || github.ref_name == 'master'
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Migrate database
+        run: python manage.py migrate
+
+      - name: Start Django server
+        run: |
+          python manage.py runserver 0.0.0.0:8000 --noreload &
+          sleep 5
+
+      - name: Run Locust load test
+        run: |
+          locust -f locustfile.py \
+            --host=http://localhost:8000/api/v1 \
+            --headless \
+            -u 100 \
+            -r 10 \
+            -t 120s \
+            --csv=reports/locust \
+            --html=reports/locust_report.html
+
+      - name: Upload load test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: locust-report
+          path: |
+            reports/locust_stats.csv
+            reports/locust_report.html
