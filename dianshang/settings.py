@@ -208,6 +208,13 @@ if DEBUG:
     REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["register"] = "1000/minute"
     REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["send_code"] = "1000/minute"
 
+# CI 环境同样放宽限流，Locust 压测需要高并发
+if os.environ.get("CI") == "true":
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["anon"] = "10000/minute"
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"] = "10000/minute"
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["register"] = "10000/minute"
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["send_code"] = "10000/minute"
+
 
 # ==================== JWT配置 ====================
 SIMPLE_JWT = {

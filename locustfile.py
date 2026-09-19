@@ -120,7 +120,7 @@ class EcommerceBuyer(HttpUser):
     wait_time = between(1, 5)
 
     def on_start(self):
-        """登录并初始化"""
+        """登录并初始化（自动注册唯一买家账号，解决 CI 空库下 test111 不存在的问题）"""
         self._login()
         self._prefetch()
 
@@ -142,17 +142,8 @@ class EcommerceBuyer(HttpUser):
             self.username = username
             self._created_user = True
         else:
-            login_resp = self.client.post(
-                "/users/login/",
-                json={"username": "test111", "password": "1234567811"},
-                name="/users/login/",
-            )
-            if login_resp.status_code == 200:
-                self.token = login_resp.json()["data"]["tokens"]["access"]
-                self._created_user = False
-            else:
-                self.token = None
-                self._created_user = False
+            self.token = None
+            self._created_user = False
 
     def _prefetch(self):
         self.spu_ids = []
@@ -262,7 +253,7 @@ class EcommerceSeller(HttpUser):
     wait_time = between(2, 8)
 
     def on_start(self):
-        """卖家登录"""
+        """卖家登录（CI 空库时自动注册卖家账号）"""
         resp = self.client.post(
             "/users/login/",
             json={"username": "seller111", "password": "1234567811"},
@@ -271,7 +262,22 @@ class EcommerceSeller(HttpUser):
         if resp.status_code == 200:
             self.token = resp.json()["data"]["tokens"]["access"]
         else:
-            self.token = None
+            # 卖家账号不存在则自动注册
+            reg = self.client.post(
+                "/users/register/",
+                json={
+                    "username": "seller111",
+                    "password": "1234567811",
+                    "password_confirm": "1234567811",
+                    "role": "seller",
+                    "shop_name": "压测店铺",
+                },
+                name="/users/register/ [seller]",
+            )
+            if reg.status_code == 201:
+                self.token = reg.json()["data"]["tokens"]["access"]
+            else:
+                self.token = None
 
     def _auth_headers(self):
         if self.token:
