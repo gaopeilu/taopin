@@ -25,6 +25,10 @@ env:
   TEST_ADMIN: admin
   # TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
 
+permissions:
+  contents: write
+  pages: write
+
 jobs:
   # ====================================================================
   # 阶段一：冒烟测试（2min，每次 push 必跑）
@@ -100,16 +104,24 @@ jobs:
             --junitxml=junit.xml \
             -v --tb=short
 
+      - name: Setup Java (Allure 依赖)
+        if: always()
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Allure CLI
+        if: always()
+        run: npm install -g allure-commandline
+
       - name: Generate Allure Report
         if: always()
-        uses: simple-elf/allure-report-action@v1
-        with:
-          allure_results: allure-results
-          allure_history: allure-history
+        run: allure generate allure-results --clean -o allure-history
 
       - name: Publish Allure Report to Pages
         if: always()
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: allure-history
