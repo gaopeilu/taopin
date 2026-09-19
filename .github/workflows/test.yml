@@ -59,8 +59,20 @@ jobs:
       - name: Migrate database
         run: python manage.py migrate
 
+      - name: Start Django server
+        run: |
+          python manage.py runserver 0.0.0.0:8000 --noreload &
+          for i in $(seq 1 30); do
+            curl -s http://localhost:8000/api/v1/ > /dev/null && break
+            sleep 1
+          done
+
       - name: Run smoke tests
         run: pytest test_apis/ -m smoke -v --tb=short
+
+      - name: Stop Django server
+        if: always()
+        run: pkill -f "manage.py runserver" || true
 
   # ====================================================================
   # 阶段二：全量回归 + 报告（PR / merge 到 main 才跑）
@@ -92,6 +104,14 @@ jobs:
 
       - name: Migrate database
         run: python manage.py migrate
+
+      - name: Start Django server
+        run: |
+          python manage.py runserver 0.0.0.0:8000 --noreload &
+          for i in $(seq 1 30); do
+            curl -s http://localhost:8000/api/v1/ > /dev/null && break
+            sleep 1
+          done
 
       - name: Run full regression with Allure
         run: |
@@ -137,6 +157,10 @@ jobs:
             coverage.xml
             allure-results/
 
+      - name: Stop Django server
+        if: always()
+        run: pkill -f "manage.py runserver" || true
+
   # ====================================================================
   # 阶段三：性能基准（仅 main 分支 push 或手动触发）
   # ====================================================================
@@ -169,6 +193,14 @@ jobs:
       - name: Migrate database
         run: python manage.py migrate
 
+      - name: Start Django server
+        run: |
+          python manage.py runserver 0.0.0.0:8000 --noreload &
+          for i in $(seq 1 30); do
+            curl -s http://localhost:8000/api/v1/ > /dev/null && break
+            sleep 1
+          done
+
       - name: Run benchmarks
         run: pytest test_apis/ -m benchmark --benchmark-only --benchmark-autosave --benchmark-json=benchmarks.json
 
@@ -178,6 +210,10 @@ jobs:
         with:
           name: benchmark-results
           path: benchmarks.json
+
+      - name: Stop Django server
+        if: always()
+        run: pkill -f "manage.py runserver" || true
 
   # ====================================================================
   # 阶段四：负载测试（手动触发 或 main 分支定时执行）
@@ -211,7 +247,10 @@ jobs:
       - name: Start Django server
         run: |
           python manage.py runserver 0.0.0.0:8000 --noreload &
-          sleep 5
+          for i in $(seq 1 30); do
+            curl -s http://localhost:8000/api/v1/ > /dev/null && break
+            sleep 1
+          done
 
       - name: Run Locust load test
         run: |
@@ -232,3 +271,7 @@ jobs:
           path: |
             reports/locust_stats.csv
             reports/locust_report.html
+
+      - name: Stop Django server
+        if: always()
+        run: pkill -f "manage.py runserver" || true
