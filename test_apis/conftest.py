@@ -241,6 +241,7 @@ def auth(django_server):
     """
     普通用户登录 fixture
     整个测试 session 只登录一次，所有类共享 token
+    如果预置账号不存在则自动注册
 
     用法:
         class TestXxx:
@@ -254,6 +255,20 @@ def auth(django_server):
         "/users/login/",
         json={"username": TEST_USER, "password": TEST_PASSWORD},
     )
+    if resp.status_code != 200:
+        reg = anon.post(
+            "/users/register/",
+            json={
+                "username": TEST_USER,
+                "password": TEST_PASSWORD,
+                "password_confirm": TEST_PASSWORD,
+            },
+        )
+        assert reg.status_code == 201, f"自动注册 {TEST_USER} 失败: {reg.text}"
+        resp = anon.post(
+            "/users/login/",
+            json={"username": TEST_USER, "password": TEST_PASSWORD},
+        )
     assert resp.status_code == 200, f"登录失败: {resp.text}"
     assert_valid(WrappedLoginResponse, resp.json(), context=f"用户登录 {TEST_USER}")
     data = resp.json()["data"]
@@ -269,11 +284,33 @@ def seller_auth(django_server):
     """
     商家登录 fixture
     用于 shop-settings / goods 写操作 / orders 发货等商家专属接口
+    如果预置账号不存在则自动注册并升级为商家
     """
     resp = anon.post(
         "/users/login/",
         json={"username": TEST_SELLER, "password": TEST_SELLER_PASSWORD},
     )
+    if resp.status_code != 200:
+        reg = anon.post(
+            "/users/register/",
+            json={
+                "username": TEST_SELLER,
+                "password": TEST_SELLER_PASSWORD,
+                "password_confirm": TEST_SELLER_PASSWORD,
+            },
+        )
+        assert reg.status_code == 201, f"自动注册 {TEST_SELLER} 失败: {reg.text}"
+        token = reg.json()["data"]["tokens"]["access"]
+        client = APIClient(token)
+        up = client.post(
+            "/users/upgrade/",
+            json={"shop_name": "测试店铺"},
+        )
+        assert up.status_code == 200, f"升级商家失败: {up.text}"
+        resp = anon.post(
+            "/users/login/",
+            json={"username": TEST_SELLER, "password": TEST_SELLER_PASSWORD},
+        )
     assert resp.status_code == 200, f"商家登录失败: {resp.text}"
     assert_valid(WrappedLoginResponse, resp.json(), context=f"商家登录 {TEST_SELLER}")
     data = resp.json()["data"]
@@ -288,11 +325,26 @@ def seller_auth(django_server):
 def admin_auth(django_server):
     """
     管理员登录 fixture
+    如果预置账号不存在则自动注册
     """
     resp = anon.post(
         "/users/login/",
         json={"username": TEST_ADMIN, "password": TEST_ADMIN_PASSWORD},
     )
+    if resp.status_code != 200:
+        reg = anon.post(
+            "/users/register/",
+            json={
+                "username": TEST_ADMIN,
+                "password": TEST_ADMIN_PASSWORD,
+                "password_confirm": TEST_ADMIN_PASSWORD,
+            },
+        )
+        assert reg.status_code == 201, f"自动注册 {TEST_ADMIN} 失败: {reg.text}"
+        resp = anon.post(
+            "/users/login/",
+            json={"username": TEST_ADMIN, "password": TEST_ADMIN_PASSWORD},
+        )
     assert resp.status_code == 200, f"管理员登录失败: {resp.text}"
     assert_valid(WrappedLoginResponse, resp.json(), context=f"管理员登录 {TEST_ADMIN}")
     data = resp.json()["data"]
