@@ -1,4 +1,0 @@
-订单号: ORD3F4C7C0BBFC648DC
-用户: e2e_buyer_1789833311352
-商品: e2e_spu_1789833311267
-状态: completed
