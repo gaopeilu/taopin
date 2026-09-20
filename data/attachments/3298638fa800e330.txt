@@ -1,4 +1,0 @@
-订单号: ORDB1D8AAC4DFC34E6A
-用户: e2e_buyer_1789884463612
-商品: e2e_spu_1789884463529
-状态: completed

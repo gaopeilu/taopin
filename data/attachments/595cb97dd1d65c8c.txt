@@ -1,0 +1,4 @@
+订单号: ORDACAAFC1F920D4058
+用户: e2e_buyer_1789905494226
+商品: e2e_spu_1789905493988
+状态: completed
