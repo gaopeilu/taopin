@@ -252,31 +252,24 @@ class EcommerceSeller(HttpUser):
     wait_time = between(2, 8)
 
     def on_start(self):
-        """卖家登录（CI 空库时自动注册卖家账号）"""
-        resp = self.client.post(
-            "/users/login/",
-            json={"username": "seller111", "password": "1234567811"},
-            name="/users/login/ [seller]",
+        """卖家登录（使用唯一账号避免并发争抢）"""
+        ts = int(time.time() * 1000)
+        username = f"locust_seller_{ts}"
+        reg = self.client.post(
+            "/users/register/",
+            json={
+                "username": username,
+                "password": "1234567811",
+                "password_confirm": "1234567811",
+                "role": "seller",
+                "shop_name": "压测店铺",
+            },
+            name="/users/register/ [seller]",
         )
-        if resp.status_code == 200:
-            self.token = resp.json()["data"]["tokens"]["access"]
+        if reg.status_code == 201:
+            self.token = reg.json()["data"]["tokens"]["access"]
         else:
-            # 卖家账号不存在则自动注册
-            reg = self.client.post(
-                "/users/register/",
-                json={
-                    "username": "seller111",
-                    "password": "1234567811",
-                    "password_confirm": "1234567811",
-                    "role": "seller",
-                    "shop_name": "压测店铺",
-                },
-                name="/users/register/ [seller]",
-            )
-            if reg.status_code == 201:
-                self.token = reg.json()["data"]["tokens"]["access"]
-            else:
-                self.token = None
+            self.token = None
 
     def _auth_headers(self):
         if self.token:
