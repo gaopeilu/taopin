@@ -50,12 +50,12 @@ class EcommerceVisitor(HttpUser):
 
     def _prefetch_product_ids(self):
         """预取一些商品 ID 用于后续请求"""
-        resp = self.client.get("goods/spus/?page_size=20")
+        resp = self.client.get("/api/v1/goods/spus/?page_size=20")
         if resp.status_code == 200:
             data = resp.json()
             self.spu_ids = [item["id"] for item in data.get("results", [])]
 
-        resp = self.client.get("goods/skus/?page_size=20")
+        resp = self.client.get("/api/v1/goods/skus/?page_size=20")
         if resp.status_code == 200:
             data = resp.json()
             self.sku_ids = [item["id"] for item in data.get("results", [])]
@@ -64,7 +64,9 @@ class EcommerceVisitor(HttpUser):
     def browse_spu_list(self):
         """浏览商品列表（高频）"""
         page = random.randint(1, 5)
-        self.client.get(f"goods/spus/?page={page}&page_size=12", name="goods/spus/")
+        self.client.get(
+            f"/api/v1/goods/spus/?page={page}&page_size=12", name="/api/v1/goods/spus/"
+        )
 
     @task(3)
     def view_spu_detail(self):
@@ -72,32 +74,36 @@ class EcommerceVisitor(HttpUser):
         if not self.spu_ids:
             return
         spu_id = random.choice(self.spu_ids)
-        self.client.get(f"goods/spus/{spu_id}/", name="goods/spus/[id]/")
+        self.client.get(
+            f"/api/v1/goods/spus/{spu_id}/", name="/api/v1/goods/spus/[id]/"
+        )
 
     @task(2)
     def search_products(self):
         """搜索商品"""
         keywords = ["手机", "电脑", "衣服", "鞋子", "食品", "图书", "家电"]
         q = random.choice(keywords)
-        self.client.get(f"search/suggest/?q={q}", name="search/suggest/")
+        self.client.get(
+            f"/api/v1/search/suggest/?q={q}", name="/api/v1/search/suggest/"
+        )
 
     @task(1)
     def browse_categories(self):
         """浏览分类"""
-        self.client.get("goods/categories/", name="goods/categories/")
+        self.client.get("/api/v1/goods/categories/", name="/api/v1/goods/categories/")
 
     @task(1)
     def register_user(self):
         """注册新用户（低频）"""
         ts = int(time.time() * 1000)
         self.client.post(
-            "users/register/",
+            "/api/v1/users/register/",
             json={
                 "username": f"locust_{ts}",
                 "password": "12345678",
                 "password_confirm": "12345678",
             },
-            name="users/register/",
+            name="/api/v1/users/register/",
         )
 
 
@@ -127,13 +133,13 @@ class EcommerceBuyer(HttpUser):
         ts = int(time.time() * 1000)
         username = f"locust_buyer_{ts}"
         reg_resp = self.client.post(
-            "users/register/",
+            "/api/v1/users/register/",
             json={
                 "username": username,
                 "password": "12345678",
                 "password_confirm": "12345678",
             },
-            name="users/register/",
+            name="/api/v1/users/register/",
         )
         if reg_resp.status_code == 201:
             data = reg_resp.json()["data"]
@@ -147,10 +153,10 @@ class EcommerceBuyer(HttpUser):
     def _prefetch(self):
         self.spu_ids = []
         self.sku_ids = []
-        resp = self.client.get("goods/spus/?page_size=20")
+        resp = self.client.get("/api/v1/goods/spus/?page_size=20")
         if resp.status_code == 200:
             self.spu_ids = [item["id"] for item in resp.json().get("results", [])]
-        resp = self.client.get("goods/skus/?page_size=20")
+        resp = self.client.get("/api/v1/goods/skus/?page_size=20")
         if resp.status_code == 200:
             for item in resp.json().get("results", []):
                 if item.get("stock", 0) > 0:
@@ -166,9 +172,9 @@ class EcommerceBuyer(HttpUser):
         """浏览商品列表"""
         page = random.randint(1, 3)
         self.client.get(
-            f"goods/spus/?page={page}&page_size=12",
+            f"/api/v1/goods/spus/?page={page}&page_size=12",
             headers=self._auth_headers(),
-            name="goods/spus/ [auth]",
+            name="/api/v1/goods/spus/ [auth]",
         )
 
     @task(2)
@@ -177,9 +183,9 @@ class EcommerceBuyer(HttpUser):
         keywords = ["手机", "电脑", "衣服", "新品"]
         q = random.choice(keywords)
         self.client.get(
-            f"search/suggest/?q={q}",
+            f"/api/v1/search/suggest/?q={q}",
             headers=self._auth_headers(),
-            name="search/suggest/ [auth]",
+            name="/api/v1/search/suggest/ [auth]",
         )
 
     @task(2)
@@ -189,10 +195,10 @@ class EcommerceBuyer(HttpUser):
             return
         sku_id = random.choice(self.sku_ids)
         self.client.post(
-            "cart/add/",
+            "/api/v1/cart/add/",
             json={"sku_id": sku_id, "quantity": random.randint(1, 3)},
             headers=self._auth_headers(),
-            name="cart/add/",
+            name="/api/v1/cart/add/",
         )
 
     @task(2)
@@ -201,9 +207,9 @@ class EcommerceBuyer(HttpUser):
         if not self.token:
             return
         self.client.get(
-            "cart/",
+            "/api/v1/cart/",
             headers=self._auth_headers(),
-            name="cart/",
+            name="/api/v1/cart/",
         )
 
     @task(1)
@@ -213,7 +219,7 @@ class EcommerceBuyer(HttpUser):
             return
         sku_id = random.choice(self.sku_ids)
         self.client.post(
-            "orders/",
+            "/api/v1/orders/",
             json={
                 "items": [{"sku_id": sku_id, "quantity": 1}],
                 "receiver_name": "负载测试",
@@ -221,7 +227,7 @@ class EcommerceBuyer(HttpUser):
                 "receiver_address": "北京",
             },
             headers=self._auth_headers(),
-            name="orders/ [create]",
+            name="/api/v1/orders/ [create]",
         )
 
     @task(1)
@@ -230,9 +236,9 @@ class EcommerceBuyer(HttpUser):
         if not self.token:
             return
         self.client.get(
-            "orders/",
+            "/api/v1/orders/",
             headers=self._auth_headers(),
-            name="orders/",
+            name="/api/v1/orders/",
         )
 
 
@@ -254,16 +260,16 @@ class EcommerceSeller(HttpUser):
     def on_start(self):
         """卖家登录（CI 空库时自动注册卖家账号）"""
         resp = self.client.post(
-            "users/login/",
+            "/api/v1/users/login/",
             json={"username": "seller111", "password": "1234567811"},
-            name="users/login/ [seller]",
+            name="/api/v1/users/login/ [seller]",
         )
         if resp.status_code == 200:
             self.token = resp.json()["data"]["tokens"]["access"]
         else:
             # 卖家账号不存在则自动注册
             reg = self.client.post(
-                "users/register/",
+                "/api/v1/users/register/",
                 json={
                     "username": "seller111",
                     "password": "1234567811",
@@ -271,7 +277,7 @@ class EcommerceSeller(HttpUser):
                     "role": "seller",
                     "shop_name": "压测店铺",
                 },
-                name="users/register/ [seller]",
+                name="/api/v1/users/register/ [seller]",
             )
             if reg.status_code == 201:
                 self.token = reg.json()["data"]["tokens"]["access"]
@@ -289,9 +295,9 @@ class EcommerceSeller(HttpUser):
         if not self.token:
             return
         self.client.get(
-            "goods/spus/?page=1&page_size=10",
+            "/api/v1/goods/spus/?page=1&page_size=10",
             headers=self._auth_headers(),
-            name="goods/spus/ [seller]",
+            name="/api/v1/goods/spus/ [seller]",
         )
 
     @task(3)
@@ -300,9 +306,9 @@ class EcommerceSeller(HttpUser):
         if not self.token:
             return
         self.client.get(
-            "orders/?page=1&page_size=10",
+            "/api/v1/orders/?page=1&page_size=10",
             headers=self._auth_headers(),
-            name="orders/ [seller]",
+            name="/api/v1/orders/ [seller]",
         )
 
     @task(2)
@@ -311,9 +317,9 @@ class EcommerceSeller(HttpUser):
         if not self.token:
             return
         self.client.get(
-            "goods/categories/",
+            "/api/v1/goods/categories/",
             headers=self._auth_headers(),
-            name="goods/categories/ [seller]",
+            name="/api/v1/goods/categories/ [seller]",
         )
 
     @task(1)
@@ -321,7 +327,7 @@ class EcommerceSeller(HttpUser):
         """创建商品"""
         if not self.token:
             return
-        cat_resp = self.client.get("goods/categories/")
+        cat_resp = self.client.get("/api/v1/goods/categories/")
         if cat_resp.status_code != 200:
             return
         cats = cat_resp.json().get("results", [])
@@ -330,8 +336,8 @@ class EcommerceSeller(HttpUser):
         cat_id = random.choice(cats)["id"]
         ts = int(time.time() * 1000)
         self.client.post(
-            "goods/spus/",
+            "/api/v1/goods/spus/",
             json={"name": f"locust_spu_{ts}", "category": cat_id},
             headers=self._auth_headers(),
-            name="goods/spus/ [create]",
+            name="/api/v1/goods/spus/ [create]",
         )
